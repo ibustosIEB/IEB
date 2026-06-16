@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EAS CC — Registre d'evidències</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================
+       VARIABLES CSS (tema fosc per defecte / clar amb .light)
+    ========================================================= */
+    :root {
+      --bg:          #0f1117;
+      --surface:     #181c27;
+      --surface-2:   #1f2433;
+      --surface-3:   #262c3d;
+      --border:      #2b3142;
+      --text:        #e7eaf3;
+      --muted:       #8b93a7;
+      --accent:      #4f8ef7;
+      --accent-soft: rgba(79, 142, 247, .14);
+      --accent-2:    #7aa9ff;
+      --green:       #3fb27f;
+      --amber:       #e0a23c;
+      --red:         #e25563;
+      --grey:        #6b7280;
+      --radius:      14px;
+      --radius-sm:   9px;
+      --shadow:      0 12px 40px -12px rgba(0, 0, 0, .6);
+      --header-bg:   rgba(15, 17, 23, .85);
+      --grid:        rgba(255, 255, 255, .08);
+      --axis:        rgba(255, 255, 255, .12);
+      --glow:        rgba(79, 142, 247, .10);
+      --ring:        #ffffff;
+      --stripe-a:    #3a4154;
+      --stripe-b:    #2c3245;
+      --mono:        'JetBrains Mono', ui-monospace, monospace;
+      --sans:        'DM Sans', system-ui, sans-serif;
+    }
+
+    body.light {
+      --bg:          #f4f6fb;
+      --surface:     #ffffff;
+      --surface-2:   #eef1f7;
+      --surface-3:   #e4e9f2;
+      --border:      #d7dde8;
+      --text:        #1b2233;
+      --muted:       #5d6577;
+      --accent:      #2f6fd6;
+      --accent-soft: rgba(47, 111, 214, .12);
+      --accent-2:    #2f6fd6;
+      --shadow:      0 12px 30px -14px rgba(20, 30, 60, .22);
+      --header-bg:   rgba(255, 255, 255, .88);
+      --grid:        rgba(20, 30, 60, .10);
+      --axis:        rgba(20, 30, 60, .14);
+      --glow:        rgba(79, 142, 247, .07);
+      --ring:        #1b2233;
+      --stripe-a:    #c6cdda;
+      --stripe-b:    #dde3ee;
+    }
+
+    /* =========================================================
+       RESET + BASE
+    ========================================================= */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+      background-image: radial-gradient(900px 500px at 85% -10%, var(--glow), transparent 60%);
+      background-attachment: fixed;
+    }
+    h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -.01em; }
+    button  { font-family: inherit; cursor: pointer; }
+    input, select { font-family: inherit; }
+    .mono { font-family: var(--mono); }
+
+    /* =========================================================
+       ERROR BAR (global, fixed a la part superior)
+    ========================================================= */
+    #errorBar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: var(--red); color: #fff;
+      padding: 11px 18px; font-size: 14px;
+      display: none; box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+    }
+    #errorBar.show  { display: flex; gap: 12px; align-items: flex-start; }
+    #errorBar .x    { margin-left: auto; cursor: pointer; font-weight: 700; }
+    #errorBar code  { font-family: var(--mono); font-size: 12.5px; color: #ffe1e4; word-break: break-word; }
+
+    /* =========================================================
+       PANTALLA DE LOGIN
+    ========================================================= */
+    #login {
+      min-height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .card-login {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 34px 30px;
+      box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .brand .dot {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--accent), #2f6fd6);
+      display: grid; place-items: center;
+      font-family: var(--mono); font-weight: 700; color: #fff; font-size: 14px;
+      box-shadow: 0 6px 18px -4px var(--accent);
+    }
+    .brand h1 { font-size: 18px; }
+    .sub  { color: var(--muted); font-size: 13.5px; margin: 2px 0 22px; }
+
+    label {
+      display: block; font-size: 12.5px; color: var(--muted);
+      margin: 14px 0 6px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .field {
+      width: 100%;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); padding: 11px 13px;
+      border-radius: var(--radius-sm); font-size: 15px;
+      outline: none; transition: border .15s, box-shadow .15s;
+    }
+    .field:focus   { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    select.inline  { width: auto; display: inline-block; }
+
+    /* Botons */
+    .btn {
+      background: var(--accent); color: #fff; border: none;
+      padding: 12px 16px; border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 600; width: 100%; margin-top: 20px;
+      transition: filter .15s, transform .05s;
+    }
+    .btn:hover        { filter: brightness(1.08); }
+    .btn:active       { transform: translateY(1px); }
+    .btn.sm           { width: auto; margin: 0; padding: 9px 14px; font-size: 13.5px; }
+    .btn.ghost        { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+    .btn.ghost:hover  { background: var(--surface-3); filter: none; }
+    .btn.danger       { background: var(--red); }
+    .btn:disabled     { opacity: .5; cursor: not-allowed; filter: none; }
+    .btn:disabled:hover { filter: none; transform: none; }
+
+    /* Accés ràpid (proves) */
+    .quick         { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 18px; }
+    .quick p       { color: var(--muted); font-size: 12px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .05em; }
+    .quick-row     { display: flex; gap: 8px; }
+    .quick-row .btn{ margin: 0; flex: 1; font-size: 13px; padding: 10px 8px; }
+    #pingStatus    { margin-top: 14px; font-family: var(--mono); font-size: 12px; color: var(--muted); min-height: 16px; }
+
+    /* =========================================================
+       ESTRUCTURA PRINCIPAL DE L'APP
+    ========================================================= */
+    #app { display: none; min-height: 100%; flex-direction: column; }
+
+    /* Capçalera sticky */
+    header.top {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--header-bg); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 22px;
+      display: flex; align-items: center; gap: 14px; height: 58px; flex-wrap: wrap;
+    }
+    header.top .brand { margin: 0; }
+
+    /* Nav principal */
+    .nav { display: flex; gap: 4px; margin-left: 8px; flex-wrap: wrap; }
+    .nav button {
+      background: transparent; border: none; color: var(--muted);
+      padding: 9px 13px; border-radius: 9px; font-size: 13.5px; font-weight: 500;
+      transition: .15s;
+    }
+    .nav button:hover  { color: var(--text); background: var(--surface-2); }
+    .nav button.active { color: var(--accent-2); background: var(--accent-soft); }
+
+    /* Caixa d'usuari (dreta de la capçalera) */
+    .userbox { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .userbox .who      { text-align: right; line-height: 1.2; }
+    .userbox .who .n   { font-size: 13px; font-weight: 600; }
+    .userbox .who .r   { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+    .modepill {
+      font-family: var(--mono); font-size: 11px;
+      color: var(--accent-2); background: var(--accent-soft);
+      padding: 3px 9px; border-radius: 20px; cursor: pointer;
+    }
+
+    /* Zona de contingut principal */
+    main { padding: 24px 22px 70px; max-width: 1040px; margin: 0 auto; width: 100%; }
+
+    /* =========================================================
+       COMPONENTS UI GENÈRICS
+    ========================================================= */
+    .page-title { font-size: 22px; margin-bottom: 4px; }
+    .page-sub   { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .panel h3 { font-size: 15px; margin-bottom: 14px; }
+
+    .row     { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .spacer  { flex: 1; }
+    .muted   { color: var(--muted); }
+    .empty   { text-align: center; color: var(--muted); padding: 30px; font-size: 14px; }
+
+    /* Cards estadístiques */
+    .cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .card  { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .stat .k { font-family: var(--mono); font-size: 28px; font-weight: 600; line-height: 1; }
+    .stat .l { color: var(--muted); font-size: 12.5px; margin-top: 7px; }
+
+    /* Taules */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+    tbody tr:hover { background: var(--surface-2); }
+
+    /* Layout de dues columnes */
+    .two-col { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; }
+    @media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Llegenda de colors */
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .legend i    { width: 11px; height: 11px; border-radius: 3px; }
+
+    /* Radar chart */
+    canvas { max-width: 100%; }
+
+    /* Barra de distribució */
+    .distbar   { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin: 8px 0; }
+    .distbar i { display: block; height: 100%; }
+
+    /* =========================================================
+       WIZARD D'ENREGISTRAMENT
+    ========================================================= */
+
+    /* Engrunes (breadcrumbs) */
+    .crumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; font-size: 13px; }
+    .crumb  { background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 13px; color: var(--muted); cursor: pointer; transition: .12s; }
+    .crumb.on   { color: var(--accent-2); border-color: var(--accent); background: var(--accent-soft); }
+    .crumb.done { color: var(--text); }
+    .crumb.muted{ opacity: .45; font-style: italic; }
+
+    .step-title { font-size: 21px; margin-bottom: 4px; }
+    .step-sub   { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+    /* Graella d'opcions (passos 1–5) */
+    .opts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .opt  {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 16px;
+      cursor: pointer; transition: .14s; text-align: left;
+    }
+    .opt:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .opt .big  { font-family: var(--mono); font-size: 24px; font-weight: 600; color: var(--accent-2); }
+    .opt .t    { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .opt .d    { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .opt.center{ text-align: center; display: grid; place-items: center; min-height: 88px; }
+    .opt.center .big { font-size: 30px; }
+
+    /* Tabs d'indicadors */
+    .indtabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .indtab  {
+      border: 1px solid var(--border); background: var(--surface-2); border-radius: 10px;
+      padding: 9px 13px; cursor: pointer; font-size: 13px;
+      display: flex; align-items: center; gap: 8px; transition: .12s;
+    }
+    .indtab .swatch { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+    .indtab .code   { font-family: var(--mono); font-weight: 600; }
+    .indtab .prog   { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .indtab.on  { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-2); }
+    .indtab.ok  { border-color: var(--green); }
+    .indtab.ok .prog { color: var(--green); }
+
+    /* Descripció de l'indicador actiu */
+    .ind-desc {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent); border-radius: 8px;
+      padding: 11px 14px; font-size: 13.5px; margin-bottom: 14px;
+    }
+    .ind-desc .cap { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 3px; }
+
+    /* Botons de nota (grid GRUBNA + NA) */
+    .gbtns { display: flex; gap: 7px; }
+    .gbtn  {
+      width: 34px; height: 32px; border-radius: 8px;
+      border: 2px solid transparent; background: var(--surface-3);
+      transition: .1s; cursor: pointer;
+    }
+    .gbtn:hover { transform: scale(1.08); }
+    .gbtn.on    { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring); }
+    .gbtn.na    { background: repeating-linear-gradient(45deg, var(--stripe-a), var(--stripe-a) 5px, var(--stripe-b) 5px, var(--stripe-b) 10px); }
+
+    /* Files d'alumnes */
+    .student-line     { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+    .student-line .nm { flex: 1; font-size: 14px; }
+    .student-line.off { opacity: .55; }
+    .student-line.off .nm { text-decoration: line-through; }
+    .ntag { font-size: 10.5px; background: var(--surface-3); color: var(--muted); padding: 2px 7px; border-radius: 5px; margin-left: 8px; text-decoration: none; display: inline-block; }
+    .ptag { font-size: 10.5px; background: rgba(224, 162, 60, .18); color: #f0c074; padding: 2px 7px; border-radius: 5px; margin-left: 8px; }
+
+    .subhead  { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 18px 0 6px; }
+    .allrow   { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+    .counter  { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+
+    /* Selector de capacitats i indicadors (nova activitat) */
+    .capacc   { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .capwrap  { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+    .capHead  {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      background: transparent; border: none; color: var(--text);
+      padding: 11px 13px; font-size: 14px; font-weight: 600; text-align: left;
+    }
+    .capHead .arrow { color: var(--muted); font-size: 12px; width: 12px; }
+    .capHead .cn    { flex: 1; }
+    .capHead .badge { font-family: var(--mono); font-size: 11px; background: var(--accent-soft); color: var(--accent-2); padding: 2px 8px; border-radius: 20px; }
+    .capBody { padding: 4px 13px 12px; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--border); }
+    .indpick { display: flex; align-items: center; gap: 9px; padding: 7px 4px; font-size: 13.5px; cursor: pointer; border-radius: 6px; }
+    .indpick:hover { background: var(--surface-3); }
+    .indpick input  { width: 16px; height: 16px; flex: none; cursor: pointer; }
+    .indpick .swatch{ width: 11px; height: 11px; border-radius: 3px; flex: none; }
+    .indpick .code  { font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--accent-2); flex: none; }
+
+    /* =========================================================
+       GRAELLA DE RESUM (cel·les de color)
+    ========================================================= */
+    .cell { width: 30px; height: 26px; border-radius: 6px; display: inline-block; background: var(--surface-3); }
+    .cell.empty {
+      background: repeating-linear-gradient(45deg, var(--stripe-a), var(--stripe-a) 4px, var(--stripe-b) 4px, var(--stripe-b) 8px);
+    }
+    td.cc { text-align: center; }
+
+    /* =========================================================
+       RESPONSIVE (mòbil < 680px)
+    ========================================================= */
+    @media (max-width: 680px) {
+      header.top { height: auto; padding: 8px 14px; gap: 8px; }
+      .nav       { order: 3; width: 100%; margin-left: 0; justify-content: flex-start; }
+      .userbox   { margin-left: auto; gap: 8px; }
+      .userbox .who { display: none; }
+      main       { padding: 18px 14px 70px; }
+      .gbtn      { width: 38px; height: 36px; }
+      .opts      { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
+
+    /* =========================================================
+       TOAST + OVERLAY + MODAL
+    ========================================================= */
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
+      padding: 11px 18px; border-radius: 10px; z-index: 500; font-size: 14px;
+      box-shadow: var(--shadow); display: none; max-width: 90%;
+    }
+    .toast.show { display: block; }
+
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(8, 9, 13, .7); backdrop-filter: blur(3px);
+      z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .overlay.show { display: flex; }
+
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 100%; max-width: 460px;
+      padding: 24px; box-shadow: var(--shadow);
+    }
+    .modal .actions       { display: flex; gap: 10px; margin-top: 20px; }
+    .modal .actions .btn  { margin: 0; }
+  </style>
+</head>
+<body>
+
+<!-- =========================================================
+     ERROR BAR (global)
+========================================================= -->
+<div id="errorBar">
+  <span id="errorMsg"></span>
+  <span class="x" onclick="clearError()">✕</span>
+</div>
+
+<!-- =========================================================
+     PANTALLA DE LOGIN
+========================================================= -->
+<div id="login">
+  <div class="card-login">
+    <div class="brand">
+      <div class="dot">CC</div>
+      <div><h1>EAS CC</h1></div>
+    </div>
+    <div class="sub">Avaluació per indicadors · Registre d'evidències</div>
+
+    <label for="device">Versió d'accés</label>
+    <select id="device" class="field">
+      <option value="auto">Automàtica (segons el dispositiu)</option>
+      <option value="pc">Ordinador (PC)</option>
+      <option value="mobile">Mòbil</option>
+    </select>
+
+    <label for="u">Usuari</label>
+    <input id="u" class="field" autocomplete="username" placeholder="usuari">
+
+    <label for="p">Contrasenya</label>
+    <input id="p" class="field" type="password" autocomplete="current-password" placeholder="••••••">
+
+    <button class="btn" onclick="formLogin()">Accedir</button>
+    <div id="pingStatus"></div>
+
+    <div class="quick">
+      <p>Accés ràpid (proves)</p>
+      <div class="quick-row">
+        <button class="btn ghost" onclick="quickLogin('admin', 'admin123')">Admin</button>
+        <button class="btn ghost" onclick="quickLogin('prof', '1234')">Professor (Iván)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     APP PRINCIPAL
+========================================================= -->
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <div class="dot">CC</div>
+      <h1>EAS CC</h1>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="userbox">
+      <span class="modepill" id="modePill"  onclick="toggleMode()"></span>
+      <span class="modepill" id="themePill" onclick="toggleTheme()"></span>
+      <div class="who">
+        <div class="n" id="uName"></div>
+        <div class="r" id="uRole"></div>
+      </div>
+      <button class="btn sm ghost" onclick="logout()">Sortir</button>
+    </div>
+  </header>
+  <main id="content"></main>
+</div>
+
+<!-- Overlay + Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<!-- Toast de confirmació -->
+<div class="toast" id="toast"></div>
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+<script>
+/* =========================================================
+   UTILITATS DE COMUNICACIÓ AMB EL BACKEND (GAS)
+========================================================= */
+
+/**
+ * Invoca handleRequest al backend de forma asíncrona.
+ * @param {string} action
+ * @param {Object} [payload]
+ * @returns {Promise<Object>}
+ */
+function call(action, payload) {
+  return new Promise(function (res, rej) {
+    google.script.run
+      .withSuccessHandler(res)
+      .withFailureHandler(rej)
+      .handleRequest(action, payload || {});
+  });
+}
+
+/* =========================================================
+   ESTAT GLOBAL
+========================================================= */
+var state = {
+  user:   null,
+  device: 'pc',
+  theme:  'dark',
+  view:   'inici',
+  // Wizard d'enregistrament
+  step:           1,
+  curs:           null,
+  classe:         null,
+  module:         null,
+  moduleProjects: null,
+  projecte:       null,
+  activity:       null,
+  data:           null,
+  indicators:     [],
+  curInd:         0,
+  students:       null,
+  grades:         {},
+  editBlock:      null,
+  // Estat dels selectors de cada vista (classe + mòdul recordats entre navegacions)
+  iniciClasse: null,  iniciModul: null,
+  resumClasse: null,  resumModul: null,
+  evModul:     null,
+  projModul:   null,
+};
+
+var CAPS     = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'];
+var CAP_NOMS = {
+  c1: 'Organització', c2: 'Iniciativa',   c3: 'Responsabilitat',
+  c4: 'Autonomia',    c5: 'Treball equip', c6: 'Rel. interpersonals', c7: 'Resolució',
+};
+
+/* =========================================================
+   HELPERS DOM + UI
+========================================================= */
+
+function $(id)  { return document.getElementById(id); }
+
+/** Escapa caràcters HTML per evitar XSS. */
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+/**
+ * Escapa una cadena per usar-la dins un argument JS entre cometes simples
+ * en un atribut HTML amb cometes dobles.
+ */
+function q(s) {
+  return String(s == null ? '' : s)
+    .replace(/\\/g, '\\\\')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/'/g, "\\'");
+}
+
+/** Serialitza un objecte de forma segura per incloure'l en un atribut HTML amb cometes simples. */
+function j(o) {
+  return JSON.stringify(o)
+    .replace(/&/g, '&amp;')
+    .replace(/'/g, '&#39;');
+}
+
+function showError(m)  { $('errorMsg').innerHTML = '<code>' + esc(m) + '</code>'; $('errorBar').classList.add('show'); }
+function clearError()  { $('errorBar').classList.remove('show'); }
+function setPing(t)    { $('pingStatus').textContent = t; }
+
+function toast(t) {
+  var e = $('toast');
+  e.textContent = t;
+  e.classList.add('show');
+  setTimeout(function () { e.classList.remove('show'); }, 2600);
+}
+
+function openModal(h)  { $('modal').innerHTML = h;  $('overlay').classList.add('show'); }
+function closeModal()  { $('overlay').classList.remove('show'); $('modal').innerHTML = ''; }
+
+/**
+ * Retorna el color hexadecimal corresponent a un valor de nota (0–10).
+ * @param {number|null} n
+ * @returns {string|null}
+ */
+function scoreColor(n) {
+  if (n == null) return null;
+  n = Math.round(n);
+  if (n <= 2)  return '#E25563';
+  if (n <= 5)  return '#E0A23C';
+  if (n <= 8)  return '#4F8EF7';
+  return '#3FB27F';
+}
+
+/* =========================================================
+   DETECCIÓ DE DISPOSITIU + LOGIN
+========================================================= */
+
+function detectDevice() {
+  var small = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+  var touch = ('ontouchstart' in window) && window.innerWidth < 900;
+  return (small || touch) ? 'mobile' : 'pc';
+}
+
+function resolveDevice() {
+  var v = $('device') ? $('device').value : 'auto';
+  return v === 'auto' ? detectDevice() : v;
+}
+
+function applyMode() {
+  document.body.classList.remove('mode-pc', 'mode-mobile');
+  document.body.classList.add('mode-' + (state.device || 'pc'));
+  $('modePill').textContent = (state.device === 'mobile' ? '📱 Mòbil' : '🖥️ PC');
+}
+
+function toggleMode() {
+  state.device = (state.device === 'mobile') ? 'pc' : 'mobile';
+  applyMode();
+  if ($('app').style.display !== 'none' && (state.user.rol === 'professor' || state.user.rol === 'admin')) {
+    buildNav();
+    go(state.device === 'mobile' ? 'registrar' : (state.view || 'inici'));
+  }
+}
+
+function applyTheme() {
+  document.body.classList.toggle('light', state.theme === 'light');
+  var p = $('themePill');
+  if (p) p.textContent = (state.theme === 'light' ? '☀️ Clar' : '🌙 Fosc');
+}
+
+function toggleTheme() {
+  state.theme = (state.theme === 'light') ? 'dark' : 'light';
+  try { localStorage.setItem('eascc_theme', state.theme); } catch (e) {}
+  applyTheme();
+}
+
+function initTheme() {
+  try { var t = localStorage.getItem('eascc_theme'); if (t) state.theme = t; } catch (e) {}
+  applyTheme();
+}
+
+/**
+ * Inicia sessió: comprova ping i llavors autentica l'usuari.
+ * @param {string} username
+ * @param {string} password
+ */
+async function doLogin(username, password) {
+  clearError(); setPing('Comprovant connexió…');
+  var pong;
+  try { pong = await call('ping'); }
+  catch (e) { setPing(''); return showError('PING ha fallat: ' + (e && e.message ? e.message : e)); }
+  if (!pong || !pong.ok) { setPing(''); return showError('PING incorrecte: ' + JSON.stringify(pong)); }
+
+  setPing('Connexió OK. Iniciant sessió…');
+  var r;
+  try { r = await call('login', { username: username, password: password }); }
+  catch (e) { setPing(''); return showError('Error de login: ' + (e && e.message ? e.message : e)); }
+  if (!r || !r.ok) { setPing(''); return showError(r && r.error ? r.error : 'Login fallit.'); }
+
+  setPing(''); clearError();
+  state.user   = r.user;
+  state.device = resolveDevice();
+  enterApp();
+}
+
+function formLogin()         { doLogin($('u').value.trim(), $('p').value); }
+function quickLogin(u, p)    { doLogin(u, p); }
+
+// Tecla Enter al login
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && $('app').style.display !== 'flex') formLogin();
+});
+
+function logout() {
+  state.user = null;
+  $('app').style.display   = 'none';
+  $('login').style.display = 'flex';
+  setPing('');
+}
+
+/* =========================================================
+   ENTRADA A L'APP + NAV
+========================================================= */
+
+function enterApp() {
+  var u = state.user;
+  $('login').style.display = 'none';
+  $('app').style.display   = 'flex';
+  $('uName').textContent   = (u.nom + ' ' + u.cognom).trim();
+  $('uRole').textContent   = u.rol;
+  applyMode(); applyTheme();
+
+  if (u.rol !== 'professor' && u.rol !== 'admin') {
+    $('nav').innerHTML = '';
+    $('content').innerHTML = '<div class="empty">Aquesta fase es centra en el rol <b>professor</b>. Els rols admin/alumne es reintegraran més endavant.</div>';
+    return;
+  }
+  buildNav();
+  go(state.device === 'mobile' ? 'registrar' : 'inici');
+}
+
+function buildNav() {
+  var navs = [
+    ['inici',      'Inici'],
+    ['registrar',  'Enregistrar evidències'],
+    ['evidencies', 'Evidències realitzades'],
+    ['resum',      'Resum classe'],
+    ['projectes',  'Projectes'],
+  ];
+  if (state.device === 'mobile') navs = [['registrar', 'Enregistrar evidències']];
+  $('nav').innerHTML = navs.map(function (n) {
+    return '<button data-v="' + n[0] + '" onclick="go(\'' + n[0] + '\')">' + n[1] + '</button>';
+  }).join('');
+  return navs;
+}
+
+function go(view) {
+  state.view = view;
+  Array.prototype.forEach.call($('nav').children, function (b) {
+    b.classList.toggle('active', b.getAttribute('data-v') === view);
+  });
+  if (view === 'inici')      return renderInici();
+  if (view === 'registrar')  return renderRegistrar();
+  if (view === 'evidencies') return renderEvidencies();
+  if (view === 'resum')      return renderResum();
+  if (view === 'projectes')  return renderProjectes();
+}
+
+/* =========================================================
+   SELECTORS COMPARTITS (classe + mòdul)
+========================================================= */
+
+async function loadAllClasses() {
+  var rc = await call('getCourses', { user: state.user });
+  if (!rc.ok) { showError(rc.error); return []; }
+  var classes = [];
+  for (var i = 0; i < rc.courses.length; i++) {
+    var r = await call('getClasses', { curs: rc.courses[i] });
+    if (r.ok) classes = classes.concat(r.classes);
+  }
+  return classes.sort();
+}
+
+async function loadModulesForClasse(classe) {
+  if (!classe) return [];
+  var r = await call('getModules', { user: state.user, curs: classe.charAt(0) });
+  return r.ok ? r.modules : [];
+}
+
+/** Renderitza la barra de selectors classe + mòdul. */
+function selectorsBar(classe, modul, classes, modules, onClasse, onModul) {
+  return '<div class="panel"><div class="row">' +
+    '<label style="margin:0">Classe</label>' +
+    '<select class="field inline" onchange="' + onClasse + '(this.value)">' +
+      '<option value="">— tria —</option>' +
+      classes.map(function (c) {
+        return '<option ' + (c === classe ? 'selected' : '') + '>' + esc(c) + '</option>';
+      }).join('') +
+    '</select>' +
+    '<label style="margin:0 0 0 8px">Mòdul</label>' +
+    '<select class="field inline" onchange="' + onModul + '(this.value)">' +
+      '<option value="">— tria —</option>' +
+      modules.map(function (m) {
+        return '<option value="' + esc(m.codi) + '" ' + (m.codi === modul ? 'selected' : '') + '>' + esc(m.nom) + '</option>';
+      }).join('') +
+    '</select>' +
+  '</div></div>';
+}
+
+/** Carrega tots els mòduls visibles per a l'usuari (tots els cursos). */
+async function loadAllModules() {
+  var rc = await call('getCourses', { user: state.user });
+  if (!rc.ok) return [];
+  var mods = [], seen = {};
+  for (var i = 0; i < rc.courses.length; i++) {
+    var r = await call('getModules', { user: state.user, curs: rc.courses[i] });
+    if (r.ok) r.modules.forEach(function (m) { if (!seen[m.codi]) { seen[m.codi] = true; mods.push(m); } });
+  }
+  return mods;
+}
+
+/* =========================================================
+   VISTA: INICI
+========================================================= */
+
+async function renderInici() {
+  $('content').innerHTML =
+    '<h2 class="page-title">Inici</h2>' +
+    '<p class="page-sub">Com va el grup en aquest mòdul segons les evidències registrades.</p>' +
+    '<div id="iniciTop"></div><div id="iniciBody"></div>';
+
+  var classes = await loadAllClasses();
+  if (!state.iniciClasse && classes.length) state.iniciClasse = classes[0];
+  var modules = await loadModulesForClasse(state.iniciClasse);
+  if (!state.iniciModul && modules.length) state.iniciModul = modules[0].codi;
+
+  $('iniciTop').innerHTML = selectorsBar(state.iniciClasse, state.iniciModul, classes, modules, 'iniciSetClasse', 'iniciSetModul');
+  if (!state.iniciClasse || !state.iniciModul) {
+    $('iniciBody').innerHTML = '<div class="empty">Tria classe i mòdul.</div>';
+    return;
+  }
+  $('iniciBody').innerHTML = '<div class="empty">Carregant…</div>';
+  var r = await call('getInici', { user: state.user, classe: state.iniciClasse, moduleCodi: state.iniciModul });
+  if (!r.ok) return showError(r.error);
+
+  var d   = r.data;
+  var tot = d.dist.r + d.dist.a + d.dist.b + d.dist.v + d.dist.na;
+  var seg = function (n, col) { return tot ? '<i style="width:' + (n / tot * 100) + '%;background:' + col + '"></i>' : ''; };
+
+  $('iniciBody').innerHTML =
+    '<div class="cards" style="margin-bottom:16px">' +
+      stat(d.nAlumnes,                      'Alumnes') +
+      stat(d.nEvidencies,                   'Evidències') +
+      stat(d.nValoracions,                  'Valoracions') +
+      stat(d.nAlumnesAval + ' / ' + d.nAlumnes, 'Alumnes avaluats') +
+    '</div>' +
+    '<div class="two-col">' +
+      '<div class="panel"><h3>Distribució de valoracions</h3>' +
+        (tot
+          ? '<div class="distbar">' + seg(d.dist.r, '#E25563') + seg(d.dist.a, '#E0A23C') + seg(d.dist.b, '#4F8EF7') + seg(d.dist.v, '#3FB27F') + seg(d.dist.na, '#6B7280') + '</div>' +
+            '<div class="legend">' +
+              '<span><i style="background:#E25563"></i>No assolit (' + d.dist.r + ')</span>' +
+              '<span><i style="background:#E0A23C"></i>En procés ('  + d.dist.a + ')</span>' +
+              '<span><i style="background:#4F8EF7"></i>Assolit ('    + d.dist.b + ')</span>' +
+              '<span><i style="background:#3FB27F"></i>Excel·lència (' + d.dist.v + ')</span>' +
+              '<span><i style="background:#6B7280"></i>NA (' + d.dist.na + ')</span>' +
+            '</div>'
+          : '<div class="empty">Encara no hi ha evidències.</div>'
+        ) +
+      '</div>' +
+      '<div class="panel"><h3>Perfil mitjà del grup</h3>' +
+        '<div style="display:grid;place-items:center"><canvas id="iniciRadar" width="320" height="320"></canvas></div>' +
+      '</div>' +
+    '</div>';
+
+  drawRadar($('iniciRadar'), CAPS.map(function (c) { return d.classMean[c] || 0; }), '#4f8ef7');
+}
+
+function stat(k, l) {
+  return '<div class="card stat"><div class="k">' + k + '</div><div class="l">' + l + '</div></div>';
+}
+
+function iniciSetClasse(v) { state.iniciClasse = v; state.iniciModul = null; renderInici(); }
+function iniciSetModul(v)  { state.iniciModul  = v; renderInici(); }
+
+/* =========================================================
+   VISTA: RESUM CLASSE
+========================================================= */
+
+async function renderResum() {
+  $('content').innerHTML =
+    '<h2 class="page-title">Resum classe</h2>' +
+    '<p class="page-sub">Nivell per competència del mòdul (només colors). Passa el ratolí per veure el valor.</p>' +
+    '<div id="resumTop"></div><div id="resumBody"></div>';
+
+  var classes = await loadAllClasses();
+  if (!state.resumClasse && classes.length) state.resumClasse = classes[0];
+  var modules = await loadModulesForClasse(state.resumClasse);
+  if (!state.resumModul && modules.length) state.resumModul = modules[0].codi;
+
+  $('resumTop').innerHTML = selectorsBar(state.resumClasse, state.resumModul, classes, modules, 'resumSetClasse', 'resumSetModul');
+  if (!state.resumClasse || !state.resumModul) {
+    $('resumBody').innerHTML = '<div class="empty">Tria classe i mòdul.</div>';
+    return;
+  }
+  $('resumBody').innerHTML = '<div class="empty">Carregant…</div>';
+  var r = await call('getModuleResum', { moduleCodi: state.resumModul, classe: state.resumClasse });
+  if (!r.ok) return showError(r.error);
+
+  var d    = r.data;
+  var head = '<th>Alumne</th>' + CAPS.map(function (c) {
+    return '<th class="cc" title="' + esc(d.capNoms[c] || c) + '">' + c.toUpperCase() + '</th>';
+  }).join('');
+  var rows = d.students.map(function (s) {
+    return '<tr><td>' + esc(s.cognom) + ', ' + esc(s.nom) + '</td>' +
+      CAPS.map(function (c) {
+        var v   = s.cells[c];
+        var col = scoreColor(v);
+        if (col) return '<td class="cc"><span class="cell" style="background:' + col + '" title="' + v + '/10"></span></td>';
+        return '<td class="cc"><span class="cell empty" title="sense dades"></span></td>';
+      }).join('') + '</tr>';
+  }).join('');
+
+  $('resumBody').innerHTML =
+    '<div class="two-col">' +
+      '<div class="panel" style="padding:6px 8px;overflow:auto">' +
+        '<table><thead><tr>' + head + '</tr></thead><tbody>' +
+          (rows || '<tr><td colspan="8" class="empty">Cap alumne / sense dades.</td></tr>') +
+        '</tbody></table>' +
+        '<div class="legend" style="padding:8px 6px">' +
+          '<span><i style="background:#E25563"></i>0–2</span>' +
+          '<span><i style="background:#E0A23C"></i>3–5</span>' +
+          '<span><i style="background:#4F8EF7"></i>6–8</span>' +
+          '<span><i style="background:#3FB27F"></i>9–10</span>' +
+          '<span><i style="background:#262c3d"></i>sense dades</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="panel"><h3>Mitjana del grup</h3>' +
+        '<div style="display:grid;place-items:center"><canvas id="resumRadar" width="320" height="320"></canvas></div>' +
+      '</div>' +
+    '</div>';
+
+  drawRadar($('resumRadar'), CAPS.map(function (c) { return d.classMean[c] || 0; }), '#3fb27f');
+}
+
+function resumSetClasse(v) { state.resumClasse = v; state.resumModul = null; renderResum(); }
+function resumSetModul(v)  { state.resumModul  = v; renderResum(); }
+
+/* =========================================================
+   VISTA: EVIDÈNCIES REALITZADES
+========================================================= */
+
+async function renderEvidencies() {
+  $('content').innerHTML =
+    '<h2 class="page-title">Evidències realitzades</h2>' +
+    '<p class="page-sub">Registres del mòdul. Pots editar-los o eliminar-los.</p>' +
+    '<div id="evTop"></div><div id="evBody"></div>';
+
+  var modules = await loadAllModules();
+  if (!state.evModul && modules.length) state.evModul = modules[0].codi;
+
+  $('evTop').innerHTML =
+    '<div class="panel"><div class="row"><label style="margin:0">Mòdul</label>' +
+    '<select class="field inline" onchange="state.evModul=this.value;renderEvidencies()">' +
+      '<option value="">— tria —</option>' +
+      modules.map(function (m) {
+        return '<option value="' + esc(m.codi) + '" ' + (m.codi === state.evModul ? 'selected' : '') + '>' + esc(m.nom) + '</option>';
+      }).join('') +
+    '</select></div></div>';
+
+  if (!state.evModul) { $('evBody').innerHTML = '<div class="empty">Tria un mòdul.</div>'; return; }
+  $('evBody').innerHTML = '<div class="empty">Carregant…</div>';
+  var r = await call('getEvidencies', { user: state.user, moduleCodi: state.evModul });
+  if (!r.ok) return showError(r.error);
+  if (!r.registres.length) { $('evBody').innerHTML = '<div class="empty">Encara no hi ha evidències en aquest mòdul.</div>'; return; }
+
+  var rows = r.registres.map(function (g) {
+    return '<tr>' +
+      '<td>' + esc(g.data) + '</td>' +
+      '<td>' + esc(g.activitat) + '</td>' +
+      '<td class="muted">P' + esc(g.projNum) + ' · ' + esc(g.projNom) + '</td>' +
+      '<td>' + esc(g.classeLetter) + '</td>' +
+      '<td class="mono">' + g.nIndicadors + 'i</td>' +
+      '<td style="text-align:right">' +
+        '<button class="btn sm ghost" onclick="editBlock(\'' + esc(g.moduleCodi) + '\',\'' + esc(g.classeLetter) + '\',' + g.startCol + ')">✏️ Editar</button> ' +
+        '<button class="btn sm danger" onclick="askDeleteBlock(\'' + esc(g.moduleCodi) + '\',\'' + esc(g.classeLetter) + '\',' + g.startCol + ',\'' + q(g.activitat) + '\')">🗑</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  $('evBody').innerHTML =
+    '<div class="panel" style="padding:6px 8px">' +
+      '<table><thead><tr>' +
+        '<th>Data</th><th>Activitat</th><th>Projecte</th><th>Grup</th><th>Indic.</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>' +
+    '</div>';
+}
+
+function askDeleteBlock(mc, letter, startCol, act) {
+  openModal(
+    '<h3>Eliminar registre</h3>' +
+    '<p class="muted">S\'eliminarà el bloc de «' + esc(act) + '» (grup ' + esc(letter) + '). No es pot desfer.</p>' +
+    '<div class="actions">' +
+      '<button class="btn ghost" onclick="closeModal()">Cancel·la</button>' +
+      '<button class="btn danger" onclick="doDeleteBlock(\'' + esc(mc) + '\',\'' + esc(letter) + '\',' + startCol + ')">Eliminar</button>' +
+    '</div>'
+  );
+}
+
+async function doDeleteBlock(mc, letter, startCol) {
+  var r = await call('deleteRegistre', { moduleCodi: mc, classeLetter: letter, startCol: startCol });
+  if (!r.ok) return showError(r.error);
+  closeModal(); toast('Registre eliminat.'); renderEvidencies();
+}
+
+async function editBlock(mc, letter, startCol) {
+  var r = await call('getBlockDetail', { moduleCodi: mc, classeLetter: letter, startCol: startCol });
+  if (!r.ok) return showError(r.error);
+  var d = r.data;
+  state.editBlock = { moduleCodi: mc, classeLetter: letter, startCol: startCol };
+  state.curs      = d.curs;
+  state.classe    = d.classe;
+  state.module    = { codi: mc, nom: d.moduleNom || mc };
+  state.projecte  = { num: d.projNum, nom: d.projNom };
+  state.activity  = d.activitat;
+  state.data      = d.data;
+  state.grades    = d.grades;
+  state.curInd    = 0;
+  state.step      = 6;
+  go('registrar');
+}
+
+/* =========================================================
+   VISTA: GESTIÓ DE PROJECTES
+========================================================= */
+
+async function renderProjectes() {
+  $('content').innerHTML =
+    '<h2 class="page-title">Projectes</h2>' +
+    '<p class="page-sub">Crea i edita els projectes de cada mòdul (professorat, activitats inicials).</p>' +
+    '<div id="prTop"></div><div id="prBody"></div>';
+
+  var modules = await loadAllModules();
+  if (!state.projModul && modules.length) state.projModul = modules[0].codi;
+
+  $('prTop').innerHTML =
+    '<div class="panel"><div class="row"><label style="margin:0">Mòdul</label>' +
+    '<select class="field inline" onchange="state.projModul=this.value;renderProjectes()">' +
+      '<option value="">— tria —</option>' +
+      modules.map(function (m) {
+        return '<option value="' + esc(m.codi) + '" ' + (m.codi === state.projModul ? 'selected' : '') + '>' + esc(m.nom) + '</option>';
+      }).join('') +
+    '</select>' +
+    '<div class="spacer"></div>' +
+    '<button class="btn sm" onclick="editProject(null)">+ Nou projecte</button>' +
+    '</div></div>';
+
+  if (!state.projModul) { $('prBody').innerHTML = '<div class="empty">Tria un mòdul.</div>'; return; }
+  $('prBody').innerHTML = '<div class="empty">Carregant…</div>';
+  var r = await call('listProjects', { moduleCodi: state.projModul });
+  if (!r.ok) return showError(r.error);
+  if (!r.projects.length) { $('prBody').innerHTML = '<div class="empty">Cap projecte en aquest mòdul.</div>'; return; }
+
+  $('prBody').innerHTML = r.projects.map(function (p) {
+    return '<div class="panel"><div class="row">' +
+      '<div>' +
+        '<h3 style="margin:0">P' + esc(p.num) + ' · ' + esc(p.nom) + '</h3>' +
+        '<div class="muted" style="font-size:13px;margin-top:4px">Profes: ' + esc(p.profs.join(', ') || '—') + '</div>' +
+      '</div>' +
+      '<div class="spacer"></div>' +
+      '<button class="btn sm ghost" onclick=\'editProject(' + j(p) + ')\'>✏️ Editar</button> ' +
+      '<button class="btn sm danger" onclick="askDeleteProject(\'' + esc(p.num) + '\',\'' + q(p.nom) + '\')">🗑</button>' +
+    '</div></div>';
+  }).join('');
+}
+
+async function editProject(p) {
+  var rp = await call('getAllProfs');
+  var profs = rp.ok ? rp.profs : [];
+  var isNew = !p;
+  p = p || { num: '', nom: '', profs: [] };
+  openModal(
+    '<h3>' + (isNew ? 'Nou projecte' : 'Editar projecte') + '</h3>' +
+    '<label>Núm. projecte</label><input id="pr_num" class="field" style="width:100%" value="' + esc(p.num) + '">' +
+    '<label>Nom del projecte</label><input id="pr_nom" class="field" style="width:100%" value="' + esc(p.nom) + '">' +
+    '<label>Professorat amb accés</label>' +
+    '<div class="checks" style="display:flex;flex-wrap:wrap;gap:8px">' +
+      profs.map(function (pf) {
+        var on = p.profs.indexOf(pf.username) > -1;
+        return '<label style="display:flex;gap:6px;align-items:center;background:var(--surface-2);border:1px solid var(--border);padding:6px 10px;border-radius:8px;font-size:13px">' +
+          '<input type="checkbox" class="pr_prof" value="' + esc(pf.username) + '" ' + (on ? 'checked' : '') + '> ' + esc(pf.nom) + '</label>';
+      }).join('') +
+    '</div>' +
+    '<div class="actions">' +
+      '<button class="btn ghost" onclick="closeModal()">Cancel·la</button>' +
+      '<button class="btn" onclick="saveProject()">Desar</button>' +
+    '</div>'
+  );
+}
+
+async function saveProject() {
+  var num = $('pr_num').value.trim();
+  if (!num) return showError('Posa el número de projecte.');
+  var profsel = Array.prototype.map.call(document.querySelectorAll('.pr_prof:checked'), function (i) { return i.value; });
+  var r = await call('saveProject', { moduleCodi: state.projModul, num: num, nom: $('pr_nom').value.trim(), professors: profsel });
+  if (!r.ok) return showError(r.error);
+  closeModal(); toast('Projecte desat.'); renderProjectes();
+}
+
+function askDeleteProject(num, nom) {
+  openModal(
+    '<h3>Eliminar projecte</h3>' +
+    '<p class="muted">S\'eliminarà «P' + esc(num) + ' · ' + esc(nom) + '» de l\'organització del mòdul (no esborra registres ja desats).</p>' +
+    '<div class="actions">' +
+      '<button class="btn ghost" onclick="closeModal()">Cancel·la</button>' +
+      '<button class="btn danger" onclick="doDeleteProject(\'' + esc(num) + '\')">Eliminar</button>' +
+    '</div>'
+  );
+}
+
+async function doDeleteProject(num) {
+  var r = await call('deleteProject', { moduleCodi: state.projModul, num: num });
+  if (!r.ok) return showError(r.error);
+  closeModal(); toast('Projecte eliminat.'); renderProjectes();
+}
+
+/* =========================================================
+   VISTA: WIZARD D'ENREGISTRAMENT
+========================================================= */
+
+var STEPS = ['Curs', 'Classe', 'Mòdul', 'Projecte', 'Activitat', 'Avaluació'];
+
+function renderRegistrar() {
+  $('content').innerHTML = '<div class="crumbs" id="crumbs"></div><div id="step"></div>';
+  if (state.editBlock) { renderStep(); } else { resetWizard(); }
+}
+
+function resetWizard() {
+  state.editBlock      = null;
+  state.step           = 1;
+  state.curs           = null;
+  state.classe         = null;
+  state.module         = null;
+  state.moduleProjects = null;
+  state.projecte       = null;
+  state.activity       = null;
+  state.data           = new Date().toISOString().slice(0, 10);
+  state.indicators     = [];
+  state.curInd         = 0;
+  state.students       = null;
+  state.grades         = {};
+  renderStep();
+}
+
+function renderCrumbs() {
+  var noProj   = (state.module && state.moduleProjects && state.moduleProjects.length === 0);
+  var projLbl  = state.projecte ? ('P' + state.projecte.num) : (noProj ? 'Sense projecte' : 'Projecte');
+  var sel = [
+    state.curs   ? ('Curs ' + state.curs) : 'Curs',
+    state.classe || 'Classe',
+    state.module ? state.module.nom : 'Mòdul',
+    projLbl,
+    state.activity || 'Activitat',
+    'Avaluació',
+  ];
+  $('crumbs').innerHTML = STEPS.map(function (s, i) {
+    var n    = i + 1;
+    var muted = (n === 4 && noProj);
+    var cls  = 'crumb' + (n === state.step ? ' on' : '') + (n < state.step ? ' done' : '') + (muted ? ' muted' : '');
+    return '<span class="' + cls + '" onclick="goStep(' + n + ')">' + esc(sel[i]) + '</span>';
+  }).join('');
+}
+
+function goStep(n) {
+  if (n === 4 && state.moduleProjects && state.moduleProjects.length === 0) n = 3;
+  if (n < state.step) { state.editBlock = null; state.step = n; renderStep(); }
+}
+
+async function renderStep() {
+  renderCrumbs();
+  if (state.step === 1) return stepCurs();
+  if (state.step === 2) return stepClasse();
+  if (state.step === 3) return stepModul();
+  if (state.step === 4) return stepProjecte();
+  if (state.step === 5) return stepActivitat();
+  if (state.step === 6) return stepAvaluacio();
+}
+
+function loadingStep(t) { $('step').innerHTML = '<div class="empty">' + (t || 'Carregant…') + '</div>'; }
+
+/* -- Pas 1: Curs -- */
+async function stepCurs() {
+  loadingStep();
+  var r = await call('getCourses', { user: state.user });
+  if (!r.ok) return showError(r.error);
+  var ord = function (c) { return c === '1' ? '1r' : c === '2' ? '2n' : c === '3' ? '3r' : c + 'è'; };
+  var opts = r.courses.map(function (c) {
+    return '<button class="opt center" onclick="pickCurs(\'' + c + '\')"><div class="big">' + ord(c) + '</div></button>';
+  }).join('');
+  $('step').innerHTML =
+    '<h2 class="step-title">Selecciona el curs</h2>' +
+    '<p class="step-sub">Els mòduls i les classes es filtraran segons el curs.</p>' +
+    '<div class="opts">' + (opts || '<div class="empty">No tens cap curs assignat.</div>') + '</div>';
+}
+function pickCurs(c) { state.curs = c; state.classe = null; state.module = null; state.step = 2; renderStep(); }
+
+/* -- Pas 2: Classe -- */
+async function stepClasse() {
+  loadingStep();
+  var r = await call('getClasses', { curs: state.curs });
+  if (!r.ok) return showError(r.error);
+  var opts = r.classes.map(function (c) {
+    return '<button class="opt center" onclick="pickClasse(\'' + c + '\')"><div class="big">' + esc(c) + '</div></button>';
+  }).join('');
+  $('step').innerHTML =
+    '<h2 class="step-title">Selecciona la classe</h2>' +
+    '<p class="step-sub">Es carregarà el llistat d\'alumnes del grup.</p>' +
+    '<div class="opts">' + (opts || '<div class="empty">No hi ha grups per al curs ' + esc(state.curs) + '.</div>') + '</div>';
+}
+function pickClasse(c) { state.classe = c; state.module = null; state.step = 3; renderStep(); }
+
+/* -- Pas 3: Mòdul -- */
+async function stepModul() {
+  loadingStep();
+  var r = await call('getModules', { user: state.user, curs: state.curs });
+  if (!r.ok) return showError(r.error);
+  var opts = r.modules.map(function (m) {
+    return '<button class="opt" onclick=\'pickModul(' + j(m) + ')\'>' +
+      '<div class="t">' + esc(m.nom) + '</div>' +
+      '<div class="d mono">codi: ' + esc(m.codi) + '</div>' +
+    '</button>';
+  }).join('');
+  $('step').innerHTML =
+    '<h2 class="step-title">Selecciona el mòdul</h2>' +
+    '<p class="step-sub">Mòduls de curs ' + esc(state.curs) + ' assignats a tu.</p>' +
+    '<div class="opts">' + (opts || '<div class="empty">No tens mòduls de curs ' + esc(state.curs) + '.</div>') + '</div>';
+}
+async function pickModul(m) {
+  state.module = m; state.projecte = null; state.activity = null; state.moduleProjects = null;
+  loadingStep('Comprovant projectes del mòdul…');
+  var r = await call('getProjects', { user: state.user, moduleCodi: m.codi });
+  state.moduleProjects = (r.ok ? r.projects : []);
+  state.step = (state.moduleProjects.length > 0) ? 4 : 5;
+  renderStep();
+}
+
+/* -- Pas 4: Projecte (opcional, s'omet si el mòdul no en té) -- */
+async function stepProjecte() {
+  var projects = state.moduleProjects || [];
+  var opts = projects.map(function (p) {
+    return '<button class="opt" onclick=\'pickProjecte(' + j(p) + ')\'>' +
+      '<div class="big">P' + esc(p.num) + '</div>' +
+      '<div class="t">' + esc(p.nom) + '</div>' +
+    '</button>';
+  }).join('');
+  $('step').innerHTML =
+    '<h2 class="step-title">Selecciona el projecte</h2>' +
+    '<p class="step-sub">Projectes del mòdul «' + esc(state.module.nom) + '» on tens accés.</p>' +
+    '<div class="opts">' + (opts || '<div class="empty">No hi ha projectes. Crea\'ls a la pestanya «Projectes».</div>') + '</div>';
+}
+function pickProjecte(p) { state.projecte = p; state.activity = null; state.step = 5; renderStep(); }
+
+/* -- Pas 5: Activitat -- */
+async function stepActivitat() {
+  loadingStep();
+  var r = await call('getActivityTypes', { moduleCodi: state.module.codi });
+  if (!r.ok) return showError(r.error);
+  var sub = state.projecte
+    ? ('Projecte P' + esc(state.projecte.num) + ' · «' + esc(state.projecte.nom) + '».')
+    : 'Evidència sense projecte.';
+  var optionList = r.types.map(function (t) {
+    var src = (t.font === 'mòdul') ? ' · del mòdul' : '';
+    return '<option value="' + esc(t.activitat) + '">' + esc(t.activitat) + ' — ' + t.nIndicadors + ' indicador' + (t.nIndicadors === 1 ? '' : 's') + src + '</option>';
+  }).join('');
+  $('step').innerHTML =
+    '<h2 class="step-title">Activitat / evidència</h2>' +
+    '<p class="step-sub">' + sub + '</p>' +
+    '<div class="panel">' +
+      '<div class="row"><label style="margin:0">Data</label>' +
+        '<input id="evData" class="field inline" type="date" value="' + esc(state.data) + '" onchange="state.data=this.value"></div>' +
+      '<label style="margin-top:14px">Activitat</label>' +
+      '<div class="row">' +
+        '<select id="actSel" class="field" style="flex:1;min-width:200px">' +
+          '<option value="">— tria una activitat —</option>' + optionList +
+        '</select>' +
+        '<button class="btn sm" style="white-space:nowrap" onclick="confirmActivitat()">Continuar →</button>' +
+      '</div>' +
+      '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">' +
+        '<button class="btn sm ghost" onclick="newActivity()">+ Nova activitat</button>' +
+        '<span class="muted" style="font-size:12.5px;margin-left:10px">Crea una activitat nova amb les seves capacitats i indicadors.</span>' +
+      '</div>' +
+    '</div>';
+}
+function confirmActivitat() {
+  var a = $('actSel') ? $('actSel').value : '';
+  if (!a) return showError('Tria una activitat del desplegable.');
+  pickActivitat(a);
+}
+
+/* -- Pas 5b: Nova activitat -- */
+var newAct = { name: '', caps: [], open: null, selected: {} };
+
+async function newActivity() {
+  loadingStep('Carregant capacitats i indicadors…');
+  var r = await call('getCapabilities', {});
+  if (!r.ok) return showError(r.error);
+  newAct = { name: '', caps: r.caps, open: null, selected: {} };
+  paintNewActivity();
+}
+
+function toggleCap(ci) { newAct.open = (newAct.open === ci ? null : ci); paintNewActivity(); }
+function toggleInd(code) { newAct.selected[code] = !newAct.selected[code]; paintNewActivity(); }
+
+function paintNewActivity() {
+  var sel = Object.keys(newAct.selected).filter(function (k) { return newAct.selected[k]; });
+  var capHtml = newAct.caps.map(function (c, ci) {
+    var open   = (newAct.open === ci);
+    var chosen = c.indicators.filter(function (ind) { return newAct.selected[ind.codi]; }).length;
+    var head =
+      '<button class="capHead" style="border-left:5px solid ' + esc(c.color) + '" onclick="toggleCap(' + ci + ')">' +
+        '<span class="arrow">' + (open ? '▾' : '▸') + '</span>' +
+        '<span class="cn">' + esc(c.capacitat) + '</span>' +
+        (chosen ? '<span class="badge">' + chosen + '</span>' : '') +
+      '</button>';
+    var body = open
+      ? '<div class="capBody">' +
+          c.indicators.map(function (ind) {
+            var on = newAct.selected[ind.codi];
+            return '<label class="indpick">' +
+              '<input type="checkbox" ' + (on ? 'checked' : '') + ' onclick="toggleInd(\'' + esc(ind.codi) + '\')">' +
+              '<span class="swatch" style="background:' + esc(ind.colorInd || c.color) + '"></span>' +
+              '<span class="code">' + esc(ind.codi) + '</span> ' +
+              '<span>' + esc(ind.text) + '</span>' +
+            '</label>';
+          }).join('') +
+        '</div>'
+      : '';
+    return '<div class="capwrap">' + head + body + '</div>';
+  }).join('');
+
+  $('step').innerHTML =
+    '<h2 class="step-title">Nova activitat</h2>' +
+    '<p class="step-sub">Es desarà dins del mòdul «' + esc(state.module.nom) + '» i la podràs reutilitzar aquí.</p>' +
+    '<div class="panel">' +
+      '<div class="row">' +
+        '<div style="flex:1;min-width:200px">' +
+          '<label style="margin-top:0">Nom de l\'activitat</label>' +
+          '<input id="na_name" class="field" style="width:100%" value="' + esc(newAct.name) + '" oninput="newAct.name=this.value" placeholder="p. ex. Sortida a la residència">' +
+        '</div>' +
+        '<div><label style="margin-top:0">Data</label><input class="field" type="date" value="' + esc(state.data) + '" onchange="state.data=this.value"></div>' +
+      '</div>' +
+      '<label style="margin-top:16px">Capacitats clau i indicadors a avaluar</label>' +
+      '<div class="capacc">' + capHtml + '</div>' +
+      '<div class="row" style="margin-top:18px;align-items:center">' +
+        '<span class="counter">' + sel.length + ' indicador' + (sel.length === 1 ? '' : 's') + ' triat' + (sel.length === 1 ? '' : 's') + '</span>' +
+        '<div class="spacer"></div>' +
+        '<button class="btn sm ghost" onclick="state.step=5;renderStep()">← Tornar</button>' +
+        '<button class="btn sm" onclick="createActivity()">Crear i continuar →</button>' +
+      '</div>' +
+    '</div>';
+}
+
+async function createActivity() {
+  var nom = (newAct.name || '').trim();
+  if (!nom) return showError('Posa un nom a l\'activitat.');
+  var codes = Object.keys(newAct.selected).filter(function (k) { return newAct.selected[k]; });
+  if (!codes.length) return showError('Tria almenys un indicador.');
+  var r = await call('saveActivity', { moduleCodi: state.module.codi, nom: nom, indicators: codes });
+  if (!r.ok) return showError(r.error);
+  toast('Activitat «' + nom + '» creada al mòdul.');
+  pickActivitat(nom);
+}
+
+function pickActivitat(a) {
+  state.activity = a; state.step = 6;
+  if (!state.editBlock) state.grades = {};
+  state.curInd = 0;
+  renderStep();
+}
+
+/* -- Pas 6: Avaluació -- */
+async function stepAvaluacio() {
+  loadingStep('Carregant indicadors i alumnes…');
+  var ri = await call('getActivityIndicators', { activitat: state.activity, moduleCodi: state.module.codi });
+  if (!ri.ok) return showError(ri.error);
+  var rs = await call('getStudents', { classe: state.classe, moduleCodi: state.module.codi });
+  if (!rs.ok) return showError(rs.error);
+  state.indicators = ri.indicators;
+  state.students   = rs.data;
+  state.indicators.forEach(function (ind) { if (!state.grades[ind.codi]) state.grades[ind.codi] = {}; });
+  paintAvaluacio();
+}
+
+/** Definició dels botons de nota: NA + 4 nivells numèrics. */
+function NB() {
+  return [
+    { value: 'NA', color: '#6B7280', label: 'No avaluable' },
+    { value: 1,    color: '#E25563', label: 'No assolit'   },
+    { value: 4,    color: '#E0A23C', label: 'En procés'    },
+    { value: 7,    color: '#4F8EF7', label: 'Assolit'      },
+    { value: 10,   color: '#3FB27F', label: 'Excel·lència' },
+  ];
+}
+
+/** Calcula l'estat d'avaluació: quantes valoracions falten i quines. */
+function evalStatus() {
+  var all  = (state.students.regular || []).concat(state.students.pendents || []);
+  var need = state.indicators.length * all.length;
+  var done = 0, pending = [];
+  state.indicators.forEach(function (x) {
+    var d = Object.keys(state.grades[x.codi] || {}).filter(function (k) { return state.grades[x.codi][k] != null; }).length;
+    done += d;
+    if (d < all.length) pending.push(x.codi);
+  });
+  return { all: all, need: need, done: done, pending: pending, complete: (need > 0 && done === need) };
+}
+
+function paintAvaluacio() {
+  if (!state.indicators.length) {
+    $('step').innerHTML = '<div class="empty">Aquesta activitat no té indicadors assignats (revisa «Codi Indicador»).</div>';
+    return;
+  }
+  var ind = state.indicators[state.curInd];
+  var stt = evalStatus();
+  var all = stt.all;
+
+  var tabs = state.indicators.map(function (x, i) {
+    var d  = Object.keys(state.grades[x.codi] || {}).filter(function (k) { return state.grades[x.codi][k] != null; }).length;
+    var ok = (d >= all.length && all.length > 0);
+    return '<div class="indtab' + (i === state.curInd ? ' on' : '') + (ok ? ' ok' : '') + '" onclick="state.curInd=' + i + ';paintAvaluacio()">' +
+      '<span class="swatch" style="background:' + esc(x.colorInd) + '"></span>' +
+      '<span class="code">' + esc(x.codi) + '</span>' +
+      '<span class="prog">' + (ok ? '✓' : d + '/' + all.length) + '</span>' +
+    '</div>';
+  }).join('');
+
+  var btns = function (stId) {
+    return '<div class="gbtns">' + NB().map(function (b) {
+      var on  = state.grades[ind.codi][stId] === b.value;
+      var na  = (b.value === 'NA') ? ' na' : '';
+      var bg  = (b.value === 'NA') ? '' : ('background:' + b.color);
+      return '<button class="gbtn' + na + (on ? ' on' : '') + '" style="' + bg + '" title="' + esc(b.label) + '" onclick="setGrade(\'' + stId + '\',\'' + b.value + '\')"></button>';
+    }).join('') + '</div>';
+  };
+
+  var lines = function (arr, pendent) {
+    return arr.map(function (s) {
+      return '<div class="student-line">' +
+        '<span class="nm">' + esc(s.cognom) + ', ' + esc(s.nom) + (pendent ? '<span class="ptag">pendent · ' + esc(s.classe) + '</span>' : '') + '</span>' +
+        btns(s.id) +
+      '</div>';
+    }).join('');
+  };
+
+  var linesOff = function (arr) {
+    return arr.map(function (s) {
+      return '<div class="student-line off"><span class="nm">' + esc(s.cognom) + ', ' + esc(s.nom) + '<span class="ntag">no matriculat</span></span></div>';
+    }).join('');
+  };
+
+  var noMat   = state.students.noMatriculats || [];
+  var done    = Object.keys(state.grades[ind.codi]).filter(function (k) { return state.grades[ind.codi][k] != null; }).length;
+  var projTxt = state.projecte ? (' · P' + esc(state.projecte.num)) : '';
+
+  var saveBtn = stt.complete
+    ? '<button class="btn sm" onclick="saveRegistre()">Desar registre</button>'
+    : '<button class="btn sm" disabled title="Falten valoracions">Falten ' + (stt.need - stt.done) + ' valoracions</button>';
+
+  $('step').innerHTML =
+    '<h2 class="step-title">' + (state.editBlock ? 'Editar registre · ' : 'Avaluació · ') + esc(state.activity) + '</h2>' +
+    '<p class="step-sub">Grup ' + esc(state.classe) + ' · «' + esc(state.module.nom) + '»' + projTxt + ' · ' + esc(state.data) + '</p>' +
+    '<div class="indtabs">' + tabs + '</div>' +
+    '<div class="ind-desc">' +
+      '<div class="cap" style="color:' + esc(ind.colorInd) + '">' + esc(ind.capacitat) + ' · ' + esc(ind.codi) + '</div>' +
+      esc(ind.text) +
+    '</div>' +
+    '<div class="panel">' +
+      '<div class="allrow">' +
+        '<span class="muted" style="font-size:13px">Aplica a tots →</span>' +
+        '<div class="gbtns">' + NB().map(function (b) {
+          var na = (b.value === 'NA') ? ' na' : '';
+          var bg = (b.value === 'NA') ? '' : ('background:' + b.color);
+          return '<button class="gbtn' + na + '" style="' + bg + '" title="' + esc(b.label) + '" onclick="setAll(\'' + b.value + '\')"></button>';
+        }).join('') + '</div>' +
+        '<div class="spacer"></div>' +
+        '<span class="counter">' + done + ' / ' + all.length + '</span>' +
+      '</div>' +
+      lines(state.students.regular || [], false) +
+      ((state.students.pendents && state.students.pendents.length)
+        ? '<div class="subhead">Pendents (altres grups)</div>' + lines(state.students.pendents, true)
+        : '') +
+      (noMat.length ? '<div class="subhead">No matriculats / aprovats (no avaluables)</div>' + linesOff(noMat) : '') +
+    '</div>' +
+    '<div class="legend">' + NB().map(function (b) {
+      var sw = (b.value === 'NA')
+        ? 'background:repeating-linear-gradient(45deg,var(--stripe-a),var(--stripe-a) 4px,var(--stripe-b) 4px,var(--stripe-b) 8px)'
+        : 'background:' + b.color;
+      return '<span><i style="' + sw + '"></i>' + esc(b.label) + '</span>';
+    }).join('') + '</div>' +
+    (!stt.complete
+      ? '<div class="muted" style="font-size:12.5px;margin-top:10px">Has d\'avaluar tots els indicadors per a tots els alumnes abans de desar. Pendents: ' + stt.pending.join(', ') + '</div>'
+      : '') +
+    '<div class="row" style="margin-top:18px">' +
+      '<div class="spacer"></div>' +
+      '<button class="btn sm ghost" onclick="go(\'registrar\')">Cancel·lar</button>' +
+      saveBtn +
+    '</div>';
+}
+
+function setGrade(stId, value) {
+  var ind = state.indicators[state.curInd];
+  value = (value === 'NA') ? 'NA' : Number(value);
+  state.grades[ind.codi][stId] = value;
+  paintAvaluacio();
+}
+
+function setAll(value) {
+  var ind = state.indicators[state.curInd];
+  value = (value === 'NA') ? 'NA' : Number(value);
+  var all = (state.students.regular || []).concat(state.students.pendents || []);
+  all.forEach(function (s) { state.grades[ind.codi][s.id] = value; });
+  paintAvaluacio();
+}
+
+async function saveRegistre() {
+  var stt = evalStatus();
+  if (!stt.complete) {
+    return showError('Has d\'avaluar tots els indicadors per a tots els alumnes abans de desar (falten ' + (stt.need - stt.done) + ').');
+  }
+  var pl = {
+    curs:        state.curs,
+    classe:      state.classe,
+    moduleCodi:  state.module.codi,
+    projecteNum: state.projecte ? state.projecte.num : '',
+    projecteNom: state.projecte ? state.projecte.nom : '',
+    activitat:   state.activity,
+    data:        state.data,
+    grades:      state.grades,
+    createdBy:   state.user.username,
+  };
+  if (state.editBlock) pl.blockCol = state.editBlock.startCol;
+  var r = await call('saveRegistre', pl);
+  if (!r.ok) return showError(r.error);
+  toast(r.result.missatge || 'Desat.');
+  state.editBlock = null;
+  go('evidencies');
+}
+
+/* =========================================================
+   GRÀFIC RADAR (7 capacitats)
+========================================================= */
+
+/**
+ * Dibuixa un gràfic de radar sobre un element <canvas>.
+ * @param {HTMLCanvasElement} canvas
+ * @param {number[]}          values  7 valors (0–10), un per capacitat
+ * @param {string}            color   Color hex del polígon (p. ex. '#4f8ef7')
+ */
+function drawRadar(canvas, values, color) {
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W   = canvas.width, H = canvas.height;
+  var cx  = W / 2, cy = H / 2;
+  var R   = Math.min(W, H) / 2 - 40;
+  var N   = CAPS.length, max = 10;
+
+  var gs    = getComputedStyle(document.body);
+  var gridC = (gs.getPropertyValue('--grid') || 'rgba(255,255,255,.08)').trim();
+  var axisC = (gs.getPropertyValue('--axis') || 'rgba(255,255,255,.12)').trim();
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.font = '11px "JetBrains Mono",monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  function pt(i, r) {
+    var a = -Math.PI / 2 + i * 2 * Math.PI / N;
+    return [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+  }
+
+  // Graella de fons (25% / 50% / 75% / 100%)
+  ctx.strokeStyle = gridC;
+  [0.25, 0.5, 0.75, 1].forEach(function (f) {
+    ctx.beginPath();
+    for (var i = 0; i <= N; i++) {
+      var p = pt(i % N, R * f);
+      if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+    }
+    ctx.stroke();
+  });
+
+  // Eixos i etiquetes
+  ctx.fillStyle = 'rgba(139,147,167,.95)';
+  for (var i = 0; i < N; i++) {
+    var pe = pt(i, R), pl = pt(i, R + 18);
+    ctx.strokeStyle = axisC;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(pe[0], pe[1]); ctx.stroke();
+    ctx.fillText(CAPS[i].toUpperCase(), pl[0], pl[1]);
+  }
+
+  // Polígon de dades
+  ctx.beginPath();
+  for (var j = 0; j <= N; j++) {
+    var idx = j % N;
+    var v   = Math.max(0, Math.min(max, values[idx] || 0));
+    var p   = pt(idx, R * v / max);
+    if (j === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.closePath();
+  ctx.fillStyle   = hexA(color, .20); ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+
+  // Punts als vèrtexs
+  for (var k = 0; k < N; k++) {
+    var v2 = Math.max(0, Math.min(max, values[k] || 0));
+    var p2 = pt(k, R * v2 / max);
+    ctx.beginPath(); ctx.arc(p2[0], p2[1], 3, 0, 2 * Math.PI);
+    ctx.fillStyle = color; ctx.fill();
+  }
+}
+
+/**
+ * Converteix un color hex a rgba amb alpha donat.
+ * @param {string} hex  p. ex. '#4f8ef7' o '4f8ef7'
+ * @param {number} a    Alpha (0–1)
+ * @returns {string}
+ */
+function hexA(hex, a) {
+  hex = hex.replace('#', '');
+  var r = parseInt(hex.substr(0, 2), 16);
+  var g = parseInt(hex.substr(2, 2), 16);
+  var b = parseInt(hex.substr(4, 2), 16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+}
+
+/* =========================================================
+   INICIALITZACIÓ
+========================================================= */
+initTheme();
+</script>
+</body>
+</html>
